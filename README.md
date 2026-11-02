@@ -1,7 +1,7 @@
 # Insertion Sort Lab
 
 An interactive, single-file web page for learning insertion sort.
-Students drag the cards, and the page updates `x`, `y` and `Temp`,
+Students drag the cards (and move the `place_index` pointer after every shift), and the page updates `temp_index`, `place_index` and `Temp`,
 highlights the matching Python line, and builds a pass-by-pass table
 like Figure 23.01.
 
