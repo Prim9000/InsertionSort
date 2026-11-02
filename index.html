@@ -1,100 +1,115 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Insertion Sort Lab: move the cards</title>
-<meta name="description" content="Interactive insertion sort practice. Drag the cards, watch x, y and Temp change, and see the Python code run.">
+<title>Insertion Sort Lab v2: move the pointers</title>
+<meta name="description" content="Interactive insertion sort practice. Drag the cards and the temp_index and place_index pointers to the correct position every time they change.">
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
---bg:#fff;--fg:#12332b;--mut:#4f6760;--panel:#ffffff;--mint:#8fd3a6;--blue:#2a78a8;--org:#f2af34;--lorg:#f9dda6;--red:#dd4b2f;--grn:#2e7d63;--code:#12332b;--line:#6e8b80;--card:#fff;--ink:#12332b}
+:root{box-sizing:border-box;color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fff;--fg:#12332b;--mut:#4f6760;--line:#6e8b80;--edge:#cfe0d7;--blue:#8fb0f2;--org:#f2af34;--red:#dd4b2f;--grn:#2e7d63;--code:#12332b;--ink:#12332b}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 Calibri,"Segoe UI",system-ui,sans-serif}
-main{max-width:760px;margin:0 auto;padding:20px 16px 40px}
+main{max-width:780px;margin:0 auto;padding:20px 16px 40px}
 h1{font:700 30px/1.15 Cambria,Georgia,serif;margin:0 0 4px}
+h2{font:700 20px Cambria,Georgia,serif;margin:18px 0 4px}
 .sub{color:var(--mut);margin:0 0 14px}
-#stage{position:relative;background:var(--panel);outline:1px solid #cfe0d7;border-radius:12px;overflow:hidden;touch-action:pan-x pan-y;user-select:none;min-width:600px}
-.sw{overflow-x:auto;border-radius:12px}
-.zone,.zl,.slot,.idx{pointer-events:none}
-.zone{position:absolute;left:8px;right:8px;top:26px;border:2px dashed var(--line);border-radius:10px;opacity:.55}
-.zl{position:absolute;left:14px;top:5px;font-size:13px;color:var(--mut)}
+.sw{overflow-x:auto}
+#stage{position:relative;background:#fff;outline:1px solid var(--edge);border-radius:12px;overflow:hidden;touch-action:pan-x pan-y;user-select:none;min-width:620px}
+.zone,.zl,.slot,.idx,.tray,.tl{pointer-events:none}
+.zone,.tray{position:absolute;left:8px;right:8px;border:2px dashed var(--line);border-radius:10px;opacity:.5}
+.zl,.tl{position:absolute;left:14px;font-size:13px;color:var(--mut)}
 .slot{position:absolute;border:1.5px dashed var(--line);border-radius:8px;opacity:.35}
 .slot.gap{border-color:var(--org);border-width:2.5px;opacity:1}
-.slot.tgt{background:color-mix(in srgb,var(--org) 35%,transparent)}
+.slot.tgt{background:#f2af3440}
 .idx{position:absolute;text-align:center;font-size:14px;font-weight:700;color:var(--grn)}
-.badge{position:absolute;z-index:3;font-size:12px;height:24px;border-radius:6px;color:#fff;font-weight:700;text-align:center;line-height:24px;transition:left .35s}
-.card{position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;font:700 26px Calibri,sans-serif;background:var(--card);border:1.5px solid var(--line);border-radius:10px;cursor:grab;transition:left .35s,top .35s,background .2s;touch-action:none}
-.card.sorted{background:var(--blue);color:#fff;border-color:var(--blue)}
+.badge{position:absolute;z-index:3;height:24px;border-radius:6px;color:#fff;font:700 12px/24px Calibri,sans-serif;text-align:center;transition:left .35s,top .35s}
+.badge.mv{cursor:grab;animation:p .9s infinite;touch-action:none}
+.badge.pulse{animation:p .7s 3}.badge.drag{transition:none;z-index:9;cursor:grabbing}
+.card{position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;font-weight:700;background:#fff;border:1.5px solid var(--line);border-radius:10px;cursor:grab;transition:left .35s,top .35s,background .2s;touch-action:none}
+.card.sorted{background:var(--blue)}
 .card.cur{background:var(--red);color:#fff;border:3px solid var(--red)}
 .card.temp{background:var(--org);color:var(--ink);border-color:var(--org)}
 .card.drag{transition:none;z-index:9;cursor:grabbing;box-shadow:0 6px 16px #0005}
-.badge.mv{cursor:grab;animation:p .9s infinite}.badge.pulse{animation:p .7s 3}.badge.drag{transition:none;z-index:9}
-.card.pulse{animation:p 0.7s 3}
-.card.shake{animation:s .35s}
+.card.pulse{animation:p .7s 3}.card.shake{animation:s .35s}
 @keyframes p{50%{box-shadow:0 0 0 6px var(--org)}}
 @keyframes s{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 @media (prefers-reduced-motion:reduce){.card,.badge{transition:none}.card.pulse,.card.shake,.badge.mv,.badge.pulse{animation:none}}
 #vars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
 .v{border-radius:10px;padding:8px;text-align:center;color:#fff}
-.v b{display:block;font-size:13px}.v span{font:700 24px Consolas,"Courier New",monospace}
-#msg{min-height:3.2em;padding:10px 12px;border-radius:10px;background:var(--panel);outline:1px solid #cfe0d7;border-left:5px solid var(--line)}
-#msg.ok{border-color:var(--grn)}#msg.err{border-color:var(--red)}
+.v b{display:block;font-size:13px;overflow-wrap:anywhere}.v span{font:700 24px Consolas,"Courier New",monospace}
+#msg{min-height:3.2em;padding:10px 12px;border-radius:10px;outline:1px solid var(--edge);border-left:5px solid var(--line)}
+#msg.ok{border-left-color:var(--grn)}#msg.err{border-left-color:var(--red)}
 #test{font:14px Consolas,"Courier New",monospace;color:var(--mut);margin:8px 0;min-height:1.5em}
-#trace{display:flex;gap:12px;align-items:flex-start;padding:4px 2px}
-.tcol div{width:46px;height:26px;line-height:24px;text-align:center;border:1px solid var(--line);background:var(--card);font-weight:600}
-.tcol div.s{background:var(--blue);color:#fff}.tcol div.r{background:var(--red);color:#fff}
-.tcol.pos div{border:0;background:none;width:auto;min-width:92px;text-align:left;color:var(--mut);font-weight:400}
-.key{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 14px;font-size:14px}.key span{display:inline-block;width:14px;height:14px;border:1px solid var(--line);vertical-align:-2px;margin-right:5px}
-h2{font:700 20px Cambria,Georgia,serif;margin:18px 0 4px}
 .t{color:var(--grn);font-weight:700}.f{color:var(--red);font-weight:700}
 .btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
-button,select{font:inherit;padding:8px 14px;border-radius:8px;border:1.5px solid var(--grn);background:var(--bg);color:var(--fg);cursor:pointer}
-button.pri{background:var(--grn);color:#fff}
+button,select{font:inherit;padding:8px 14px;border-radius:8px;border:1.5px solid var(--grn);background:#fff;color:var(--fg);cursor:pointer}
+button.pri{background:var(--grn);color:#fff}button:disabled{opacity:.5;cursor:default}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--org);outline-offset:2px}
-.wrap{overflow-x:auto}
+.key{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 10px;font-size:14px}
+.key span{display:inline-block;width:14px;height:14px;border:1px solid var(--line);vertical-align:-2px;margin-right:5px}
+#trace{display:flex;gap:12px;align-items:flex-start;padding:4px 2px}
+.tcol div{width:46px;height:26px;line-height:24px;text-align:center;border:1px solid var(--line);background:#fff;font-weight:600}
+.tcol div.s{background:var(--blue)}.tcol div.r{background:var(--red);color:#fff}
+.tcol.pos div{border:0;background:none;min-width:92px;width:auto;text-align:left;color:var(--mut);font-weight:400}
 pre{margin:0;background:var(--code);color:#fff;border-radius:12px;padding:12px 0;font:13px/1.65 Consolas,"Courier New",monospace;min-width:660px}
 pre i{display:block;padding:0 16px;font-style:normal;white-space:pre}
-pre i.hl{background:#f2af3440;box-shadow:inset 3px 0 var(--org)}
-pre i.ran{background:#2e7d6366}
+pre i.hl{background:#f2af3440;box-shadow:inset 3px 0 var(--org)}pre i.ran{background:#2e7d6366}
 .k{color:#f2af34;font-weight:700}.n{color:#f9dda6}
 #stats{color:var(--mut);margin-top:10px}
 </style></head><body><main>
 <h1>Insertion Sort Lab</h1>
+<p class="sub">Sorted cards turn blue and stay blue. You also move the pointers: drag <b>temp_index</b> and <b>place_index</b> onto the correct index every time the code changes them.</p>
 <div class="sw"><div id="stage" aria-label="Card table"></div></div>
 <div id="vars"></div>
 <div id="msg" role="status" aria-live="polite"></div>
 <div id="test"></div>
 <div class="btns">
-<button id="hint">Hint</button><button id="auto" class="pri">Do the next move</button><button id="reset">Restart</button>
-<button id="new">New cards</button>
+<button id="hint">Hint</button><button id="auto" class="pri">Do the next move</button><button id="reset">Restart</button><button id="new">New cards</button>
 <label>Numbers <select id="size"><option value="cl">Set 1: Classic (5, 2, 4, 1)</option><option value="t19">Set 2: Figure 19.3 (9 cards)</option><option value="fig">Set 3: Figure 23.01 (6 cards)</option><option value="r6">Random (6 cards)</option></select></label>
 <label><input type="checkbox" id="showtest" checked> Show the while test</label>
 </div>
-<h2>Your sort, pass by pass (like Figure 23.01)</h2><div class="key"><div><span style="background:var(--blue)"></span>Sorted</div><div><span style="background:var(--red)"></span>Next card</div><div><span></span>Unsorted</div></div><div class="sw"><div id="trace"></div></div>
-<div class="wrap"><pre id="code" aria-label="Python code"></pre></div>
+<h2>Your sort, pass by pass (like Figure 23.01)</h2>
+<div class="key"><div><span style="background:var(--blue)"></span>Sorted</div><div><span style="background:var(--red)"></span>Next card</div><div><span></span>Unsorted</div></div>
+<div class="sw"><div id="trace"></div></div>
+<div class="sw" style="margin-top:12px"><pre id="code" aria-label="Python code"></pre></div>
 <div id="stats"></div>
 </main>
 <script>
+"use strict";
+/* ---------- constants ---------- */
 const CODE=["def InsertionSort(TheData):","    ArrayLength = len(TheData)","    for temp_index in range(1, ArrayLength):","        Temp = TheData[temp_index]","        place_index = temp_index - 1","        while place_index >= 0 and Temp < TheData[place_index]:","            TheData[place_index + 1] = TheData[place_index]","            place_index -= 1","        TheData[place_index + 1] = Temp","    return TheData"];
-const $=id=>document.getElementById(id), stage=$("stage");
-let shk=null,cards,cells,tempId,tempV,x,y,phase,st,hl,ran,msg,kind,L={},els={},slotEls=[],drag=null,hintId=null;
+const SETS={cl:[5,2,4,1],t19:[27,19,36,42,16,89,21,16,55],fig:[47,6,54,17,93,28]};
+const LABEL={x:"temp_index",y:"place_index"},COLOR={x:"var(--red)",y:"var(--grn)"};
+const $=id=>document.getElementById(id),stage=$("stage");
+/* ---------- state ---------- */
+let cards,cells,tempId,tempV,x,y,phase,st,hl,ran,msg,kind,hintKey,shk,drag,L={},els={};
 const val=id=>cards[id].v;
-function init(arr){cards=arr.map((v,i)=>({id:i,v}));cells=arr.map((_,i)=>i);tempId=null;tempV=null;x=1;y=null;phase="lift";st={c:0,s:0,m:0};hl=[3];ran=[];hintId=null;
- Object.values(els).forEach(e=>e.remove());els={};cards.forEach(c=>{const e=document.createElement("div");e.className="card";e.dataset.id=c.id;e.textContent=c.v;stage.appendChild(e);els[c.id]=e});
- say("Pass 1: the first card is already a sorted hand. Drag the card at temp_index = 1 up into the Temp zone to lift it out of the list.","info");render()}
-function say(t,k){msg=t;kind=k}
+/* phase: setx -> lift -> setplace -> loop <-> move -> (insert) next -> lift ... -> done */
+function init(arr){
+ Object.values(els).forEach(e=>e.remove());els={};
+ cards=arr.map((v,i)=>({id:i,v,s:i===0}));cells=arr.map((_,i)=>i);
+ tempId=tempV=x=y=null;phase="setx";st={c:0,s:0,m:0};hl=[2];ran=[];hintKey=shk=drag=null;
+ cards.forEach(c=>{const e=document.createElement("div");e.className="card";e.dataset.id=c.id;e.textContent=c.v;stage.appendChild(e);els[c.id]=e});
+ say("The for loop starts at the second card. Drag the red temp_index badge from the pointer tray onto index 1.","info");render()}
+const say=(t,k)=>{msg=t;kind=k};
+/* ---------- geometry ---------- */
 function geo(){const n=cells.length,W=stage.clientWidth,p=Math.min(88,(W-16)/(n+1)),cw=p*.8,ch=cw*1.25;
- L={n,W,p,cw,ch,l0:(W-(n+1)*p)/2,ty:36,ry:36+ch+34};L.H=L.ry+ch+92;return L}
+ L={n,W,p,cw,ch,l0:(W-(n+1)*p)/2,ty:36,ry:36+ch+34};L.by=L.ry+ch+26;L.H=L.by+98}
 const sx=i=>L.l0+(i+1)*L.p+(L.p-L.cw)/2;
+/* where must a pointer be dropped right now? null = pointer is not allowed to move */
+function want(t){
+ if(t==="x")return phase==="setx"?1:phase==="next"?x+1:null;
+ return phase==="setplace"?x-1:phase==="move"?y-1:null}
+/* ---------- render ---------- */
 function render(){geo();stage.style.height=L.H+"px";
- stage.querySelectorAll(".zone,.zl,.slot,.idx").forEach(e=>e.remove());
- stage.insertAdjacentHTML("afterbegin",`<div class="zone" style="height:${L.ch+16}px"></div><div class="zl">Temp zone: drag the key card up here</div>`);
+ stage.querySelectorAll(".zone,.zl,.slot,.idx,.tray,.tl").forEach(e=>e.remove());
+ stage.insertAdjacentHTML("afterbegin",`<div class="zone" style="top:26px;height:${L.ch+16}px"></div><div class="zl" style="top:5px">Temp zone: drag the key card up here</div><div class="tray" style="top:${L.by+58}px;height:36px"></div><div class="tl" style="top:${L.by+63}px;left:${L.W-290}px">pointer tray (a pointer waits here until it has a value)</div>`);
  const gap=cells.indexOf(null),nx=nextMove();
- for(let i=-1;i<L.n;i++){stage.insertAdjacentHTML("beforeend",`<div class="slot${i===gap?" gap":""}${hintId!==null&&nx.tgt.t==="slot"&&nx.tgt.i===i?" tgt":""}" style="left:${sx(i)}px;top:${L.ry}px;width:${L.cw}px;height:${L.ch}px"></div><div class="idx" style="left:${sx(i)}px;top:${L.ry+L.ch+4}px;width:${L.cw}px;color:${i<0?"var(--mut)":""}">[${i}]</div>`)}
- cards.forEach(c=>{const e=els[c.id],i=cells.indexOf(c.id);if(e===(drag&&drag.el))return;
-  e.style.width=L.cw+"px";e.style.height=L.ch+"px";e.style.fontSize=L.cw*.4+"px";
-  const isT=c.id===tempId;e.style.left=sx(isT?x:i)+"px";e.style.top=(isT?L.ty:L.ry)+"px";
-  e.className="card"+(isT?" temp":i>=0&&i<x+(phase==="lift"?0:1)?" sorted":(i===x&&phase==="lift"?" cur":""))+(c.id===hintId?" pulse":"")+(c.id===shk?" shake":"")});
- bdg("x","temp_index",x,"var(--red)",1);if(y!==null)bdg("y","place_index",y,"var(--grn)",0);
+ for(let i=-1;i<L.n;i++)stage.insertAdjacentHTML("beforeend",`<div class="slot${i===gap?" gap":""}${hintKey!==null&&nx.tgt&&nx.tgt.t==="slot"&&nx.tgt.i===i?" tgt":""}" style="left:${sx(i)}px;top:${L.ry}px;width:${L.cw}px;height:${L.ch}px"></div><div class="idx" style="left:${sx(i)}px;top:${L.ry+L.ch+4}px;width:${L.cw}px;${i<0?"color:var(--mut)":""}">[${i}]</div>`);
+ cards.forEach(c=>{if(drag&&drag.el===els[c.id])return;const e=els[c.id],i=cells.indexOf(c.id),isT=c.id===tempId;
+  e.style.cssText=`width:${L.cw}px;height:${L.ch}px;font-size:${L.cw*.4}px;left:${sx(isT?x:i)}px;top:${isT?L.ty:L.ry}px`;
+  e.className="card"+(isT?" temp":c.s?" sorted":phase==="lift"&&i===x?" cur":"")+(hintKey===c.id?" pulse":"")+(shk===c.id?" shake":"")});
+ ptr("y",y,0);ptr("x",x,1);
  const V=[["temp_index",x,"var(--red)"],["Temp",tempV,"#f2af34;color:#12332b"],["place_index",y,"var(--grn)"],["ArrayLength",L.n,"var(--mut)"]];
  $("vars").innerHTML=V.map(v=>`<div class="v" style="background:${v[2]}"><b>${v[0]}</b><span>${v[1]===null?"—":v[1]}</span></div>`).join("");
  const m=$("msg");m.textContent=msg;m.className=kind;
@@ -102,51 +117,67 @@ function render(){geo();stage.style.height=L.H+"px";
  let t="";if($("showtest").checked&&phase==="loop"){const a=y>=0,b=a&&tempV<val(cells[y]);
   t=`place_index >= 0 → <span class="${a?"t":"f"}">${a}</span>`+(a?`   Temp < TheData[place_index] → ${tempV} < ${val(cells[y])} → <span class="${b?"t":"f"}">${b}</span>`:"")+`   while test → <span class="${b?"t":"f"}">${b?"True: shift":"False: insert"}</span>`}
  $("test").innerHTML=t;
- $("stats").textContent=`Comparisons: ${st.c} · Shifts: ${st.s} · Mistakes: ${st.m}`;$("hint").disabled=$("auto").disabled=phase==="done";renderTrace()}
-function renderTrace(){const n=cards.length;let a=cards.map(c=>c.v),h=`<div class="tcol pos"><div><b>Position number</b></div>${a.map((_,i)=>`<div>${i}</div>`).join("")}</div>`;
- for(let k=0;k<n;k++){if(k<=x-1+(phase==="next"?1:0))h+=`<div class="tcol"><div>&nbsp;</div>${a.map((v,i)=>`<div class="${i<=k?"s":i===k+1?"r":""}">${v}</div>`).join("")}</div>`;
+ $("stats").textContent=`Comparisons: ${st.c} · Shifts: ${st.s} · Mistakes: ${st.m}`;
+ $("hint").disabled=$("auto").disabled=phase==="done";renderTrace()}
+/* a pointer badge sits under its index, or waits in the tray while its variable is unset */
+function ptr(t,i,row){let e=stage.querySelector(".p"+t);if(!e){e=document.createElement("div");e.className="badge p"+t;e.textContent=LABEL[t];stage.appendChild(e)}
+ if(drag&&drag.el===e)return;const w=LABEL[t].length*7.6+16;
+ const left=i===null?(t==="x"?14:14+92+10):sx(i)+L.cw/2-w/2,top=i===null?L.by+64:L.by+row*30;
+ e.style.cssText=`left:${left}px;top:${top}px;width:${w}px;background:${COLOR[t]}`;
+ e.className="badge p"+t+(want(t)!==null&&phase!=="done"?" mv":"")+(hintKey===t?" pulse":"")}
+function renderTrace(){const n=cards.length,done=phase==="next"?x:phase==="done"?n-1:(x||1)-1;
+ let a=cards.map(c=>c.v),h=`<div class="tcol pos"><div><b>Position number</b></div>${a.map((_,i)=>`<div>${i}</div>`).join("")}</div>`;
+ for(let k=0;k<n;k++){if(k<=done)h+=`<div class="tcol"><div>&nbsp;</div>${a.map((v,i)=>`<div class="${i<=k?"s":i===k+1?"r":""}">${v}</div>`).join("")}</div>`;
   if(k+1<n){const t=a[k+1];let j=k;while(j>=0&&t<a[j]){a[j+1]=a[j];j--}a[j+1]=t}}
  $("trace").innerHTML=h}
-function bdg(t,lab,i,c,row){let e=stage.querySelector(".b"+t);if(!e){e=document.createElement("div");e.className="badge b"+t;e.textContent=lab;stage.appendChild(e)}
- const w=lab.length*7.6+16;e.style.cssText=`left:${sx(i)+L.cw/2-w/2}px;top:${L.ry+L.ch+26+row*30}px;width:${w}px;background:${c}`;
- e.classList.toggle("mv",(t==="y"&&phase==="move")||(t==="x"&&phase==="next"));e.classList.toggle("pulse",hintId===t)}
-function nextMove(){if(phase==="done")return{};
+/* ---------- rules ---------- */
+function nextMove(){
+ for(const t of["x","y"])if(want(t)!==null&&phase!=="done")return{id:t,tgt:{t:"slot",i:want(t)},text:`Drag the ${LABEL[t]} badge to index ${want(t)}.`};
  if(phase==="lift")return{id:cells[x],tgt:{t:"temp"},text:`Drag the card ${val(cells[x])} (temp_index ${x}) up into Temp.`};
- if(phase==="next")return{id:"x",tgt:{t:"slot",i:x+1},text:`Drag the red temp_index badge one slot right, to index ${x+1} (temp_index += 1).`};
- if(phase==="move")return{id:"y",tgt:{t:"slot",i:y-1},text:`Drag the green place_index badge one slot left, to index ${y-1} (place_index -= 1).`};
+ if(phase!=="loop")return{};
  const g=y+1,v=y>=0?val(cells[y]):null,c=y>=0&&tempV<v;
- return c?{id:cells[y],tgt:{t:"slot",i:g},text:`${tempV} < ${v} is True, so drag ${v} one place right into the gap.`}:{id:tempId,tgt:{t:"slot",i:g},text:`${y<0?"place_index is -1, so place_index >= 0 is False":tempV+" < "+v+" is False"}: drop Temp into the gap at index ${g}.`}}
-function bad(t,id){st.m++;say(t,"err");shk=id;setTimeout(()=>{shk=null},450)}
-function attempt(id,tg){ran=[];hintId=null;const cell=cells.indexOf(id);
- if(phase==="move"){if(id==="y"&&tg.t==="slot"&&tg.i===y-1){y--;phase="loop";hl=[5];ran=[7];say(`place_index -= 1, so place_index = ${y}. Test again: is the while test True or False?`,"ok")}
-  else bad("Now move the green place_index badge one slot to the left (place_index -= 1).",id);return}
- if(phase==="next"){if(id==="x"&&tg.t==="slot"&&tg.i===x+1){x++;phase="lift";hl=[3];ran=[2];say(`temp_index += 1, so temp_index = ${x}. Now lift the card at temp_index = ${x} up into Temp.`,"ok")}
-  else bad("Now move the red temp_index badge one slot to the right (temp_index += 1).",id);return}
- if(id==="y")return bad("place_index only moves after a card has shifted right.",id);
- if(id==="x")return bad("temp_index only moves after the key has been inserted.",id);
- if(phase==="lift"){if(cell===x&&tg.t==="temp"){tempId=id;tempV=val(id);cells[x]=null;y=x-1;phase="loop";hl=[5];ran=[3,4];say(`Temp = TheData[${x}] = ${tempV}. Then place_index = temp_index - 1 = ${y}. Now decide: is the while test True or False?`,"ok")}
+ return c?{id:cells[y],tgt:{t:"slot",i:g},text:`${tempV} < ${v} is True, so drag ${v} one place right into the gap.`}
+  :{id:tempId,tgt:{t:"slot",i:g},text:`${y<0?"place_index is -1, so place_index >= 0 is False":tempV+" < "+v+" is False"}: drop Temp into the gap at index ${g}.`}}
+function bad(t,id){st.m++;say(t,"err");shk=id;setTimeout(()=>{shk=null;render()},450)}
+function attempt(id,tg){ran=[];hintKey=null;
+ if(id==="x"||id==="y"){const w=want(id);
+  if(w===null)return bad(`${LABEL[id]} can only move when the code changes it.`,id);
+  if(tg.t!=="slot"||tg.i!==w)return bad(`Not there. Drop the ${LABEL[id]} badge on index ${w}.`,id);
+  if(phase==="setx"){x=1;phase="lift";hl=[3];ran=[2];say("temp_index = 1. Now lift the card at temp_index up into the Temp zone.","ok")}
+  else if(phase==="next"){x++;phase="lift";hl=[3];ran=[2];say(`temp_index += 1, so temp_index = ${x}. Now lift the card at temp_index up into the Temp zone.`,"ok")}
+  else if(phase==="setplace"){y=x-1;phase="loop";hl=[5];ran=[4];say(`place_index = temp_index - 1 = ${y}. Now decide: is the while test True or False?`,"ok")}
+  else{y--;phase="loop";hl=[5];ran=[7];say(`place_index -= 1, so place_index = ${y}. Test again: is the while test True or False?`,"ok")}
+  return}
+ const cell=cells.indexOf(id);
+ if(phase==="setx"||phase==="next")return bad("First move the red temp_index badge to its new index.",id);
+ if(phase==="setplace"||phase==="move")return bad("First move the green place_index badge to its new index.",id);
+ if(phase==="lift"){if(cell===x&&tg.t==="temp"){tempId=id;tempV=val(id);cells[x]=null;y=null;phase="setplace";hl=[4];ran=[3];
+   say(`Temp = TheData[${x}] = ${tempV}. place_index was reset: drag the green place_index badge from the tray to temp_index - 1 = ${x-1}.`,"ok")}
   else bad(`Lift the card at temp_index = ${x} up into the Temp zone first.`,id);return}
  const g=y+1,c=y>=0&&tempV<val(cells[y]);
  if(tg.t!=="slot"||tg.i!==g)return bad(`Drop it into the dashed gap at index place_index + 1 = ${g}.`,id);
  if(id===tempId){if(c)return bad(`Not yet! ${tempV} < ${val(cells[y])} is True, so shift ${val(cells[y])} right first.`,id);
-  if(y>=0)st.c++;cells[g]=id;tempId=null;ran=[8];
-  if(x+1>=L.n){x++;phase="done";hl=[9];say(`Sorted! ${st.c} comparisons, ${st.s} shifts, ${st.m} mistakes.`,"ok")}
-  else{phase="next";hl=[2];say(`Inserted: TheData[${g}] = Temp. The sorted hand now has ${x+1} cards. The for loop moves on: drag the red temp_index badge one slot right (temp_index += 1).`,"ok")}return}
+  if(y>=0)st.c++;cells[g]=id;cards[id].s=true;tempId=null;ran=[8];
+  if(x+1>=L.n){phase="done";hl=[9];say(`Sorted! ${st.c} comparisons, ${st.s} shifts, ${st.m} mistakes.`,"ok")}
+  else{phase="next";hl=[2];say(`Inserted: TheData[${g}] = Temp. The for loop moves on: drag the red temp_index badge one slot right (temp_index += 1).`,"ok")}return}
  if(cell===y&&y>=0){if(!c)return bad(`Stop! ${tempV} < ${val(id)} is False, so the while loop ends.${tempV===val(id)?" Equal values are not shifted, which keeps the sort stable.":""} Insert Temp into the gap instead.`,id);
-  st.c++;st.s++;cells[g]=id;cells[y]=null;phase="move";hl=[7];ran=[6];say(`Shifted right: TheData[place_index + 1] = TheData[place_index]. Now you move place_index: drag its green badge one slot left.`,"ok");return}
+  st.c++;st.s++;cells[g]=id;cells[y]=null;phase="move";hl=[7];ran=[6];say("Shifted right (the card stays blue). Now you move place_index: drag its green badge one slot left.","ok");return}
  bad(`Only the card at place_index = ${y} can move right, or Temp can drop into the gap.`,id)}
-stage.addEventListener("pointerdown",e=>{const el=e.target.closest(".card,.badge");if(!el||phase==="done")return;const isB=!el.classList.contains("card"),isY=el.classList.contains("by");if(isB&&!(isY?phase==="move":phase==="next"))return;const r=el.getBoundingClientRect();
- drag={el,id:isB?(isY?"y":"x"):+el.dataset.id,ox:e.clientX-r.left,oy:e.clientY-r.top,sx:e.clientX,sy:e.clientY};el.setPointerCapture(e.pointerId);el.classList.add("drag")});
+/* ---------- drag and drop ---------- */
+stage.addEventListener("pointerdown",e=>{const el=e.target.closest(".card,.badge");if(!el||phase==="done")return;
+ const isB=el.classList.contains("badge"),id=isB?(el.classList.contains("px")?"x":"y"):+el.dataset.id;if(isB&&want(id)===null)return;
+ const r=el.getBoundingClientRect();drag={el,id,ox:e.clientX-r.left,oy:e.clientY-r.top,sx:e.clientX,sy:e.clientY};el.setPointerCapture(e.pointerId);el.classList.add("drag")});
 stage.addEventListener("pointermove",e=>{if(!drag)return;const r=stage.getBoundingClientRect();drag.el.style.left=e.clientX-r.left-drag.ox+"px";drag.el.style.top=e.clientY-r.top-drag.oy+"px"});
 stage.addEventListener("pointerup",e=>{if(!drag)return;const d=drag;drag=null;d.el.classList.remove("drag");
- const moved=Math.hypot(e.clientX-d.sx,e.clientY-d.sy)>6,r=stage.getBoundingClientRect(),b=d.el.getBoundingClientRect(),cx=b.left+b.width/2-r.left,cy=b.top+b.height/2-r.top;
- let tg;if(!moved)tg=d.id==="y"?{t:"slot",i:y-1}:d.id==="x"?{t:"slot",i:x+1}:phase==="lift"?{t:"temp"}:{t:"slot",i:cells.indexOf(null)};
- else if(d.id!=="y"&&d.id!=="x"&&cy<L.ry-10)tg={t:"temp"};else tg={t:"slot",i:Math.max(-1,Math.min(L.n-1,Math.floor((cx-L.l0)/L.p)-1))};
+ const moved=Math.hypot(e.clientX-d.sx,e.clientY-d.sy)>6,r=stage.getBoundingClientRect(),b=d.el.getBoundingClientRect(),cx=b.left+b.width/2-r.left,cy=b.top+b.height/2-r.top,isP=d.id==="x"||d.id==="y";
+ let tg;if(!moved)tg=isP?{t:"slot",i:want(d.id)}:phase==="lift"?{t:"temp"}:{t:"slot",i:cells.indexOf(null)};
+ else if(!isP&&cy<L.ry-10)tg={t:"temp"};else tg={t:"slot",i:Math.max(-1,Math.min(L.n-1,Math.floor((cx-L.l0)/L.p)-1))};
  attempt(d.id,tg);render()});
-$("hint").onclick=()=>{const m=nextMove();hintId=m.id;say("Hint: "+m.text,"info");render()};
+/* ---------- controls ---------- */
+$("hint").onclick=()=>{const m=nextMove();hintKey=m.id;say("Hint: "+m.text,"info");render()};
 $("auto").onclick=()=>{const m=nextMove();attempt(m.id,m.tgt);render()};
+const pick=()=>SETS[$("size").value]||Array.from({length:6},()=>1+Math.floor(Math.random()*99));
 $("reset").onclick=()=>init(cards.map(c=>c.v));
-const SETS={cl:[5,2,4,1],t19:[27,19,36,42,16,89,21,16,55],fig:[47,6,54,17,93,28]},pick=()=>SETS[$("size").value]||Array.from({length:6},()=>1+Math.floor(Math.random()*99));
 $("new").onclick=()=>{$("size").value="r6";init(pick())};$("size").onchange=()=>init(pick());
 $("showtest").onchange=render;addEventListener("resize",render);
 init(pick());
