@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Insertion Sort Lab: move the cards</title>
+<meta name="description" content="Interactive insertion sort practice. Drag the cards, watch x, y and Temp change, and see the Python code run.">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fff;--fg:#12332b;--mut:#4f6760;--panel:#eef6f2;--mint:#8fa9e8;--org:#f2af34;--lorg:#f9dda6;--red:#dd4b2f;--grn:#2e7d63;--code:#12332b;--line:#6e8b80;--card:#fff;--ink:#12332b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1f1a;--fg:#eaf3ef;--mut:#9db7ad;--panel:#173128;--mint:#3b57a6;--lorg:#7a5d1c;--code:#0a1612;--card:#10261f}}
+:root[data-theme="dark"]{--bg:#0e1f1a;--fg:#eaf3ef;--mut:#9db7ad;--panel:#173128;--mint:#3b57a6;--lorg:#7a5d1c;--code:#0a1612;--card:#10261f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 Calibri,"Segoe UI",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 40px}
+h1{font:700 30px/1.15 Cambria,Georgia,serif;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 14px}
+#stage{position:relative;background:var(--panel);border-radius:12px;overflow:hidden;touch-action:pan-x pan-y;user-select:none;min-width:600px}
+.sw{overflow-x:auto;border-radius:12px}
+.zone,.zl,.slot,.idx{pointer-events:none}
+.zone{position:absolute;left:8px;right:8px;top:26px;border:2px dashed var(--line);border-radius:10px;opacity:.55}
+.zl{position:absolute;left:14px;top:5px;font-size:13px;color:var(--mut)}
+.slot{position:absolute;border:1.5px dashed var(--line);border-radius:8px;opacity:.35}
+.slot.gap{border-color:var(--org);border-width:2.5px;opacity:1}
+.slot.tgt{background:color-mix(in srgb,var(--org) 35%,transparent)}
+.idx{position:absolute;text-align:center;font-size:14px;font-weight:700;color:var(--grn)}
+.badge{position:absolute;height:24px;border-radius:6px;color:#fff;font-weight:700;text-align:center;line-height:24px;transition:left .35s}
+.card{position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;font:700 26px Calibri,sans-serif;background:var(--card);border:1.5px solid var(--line);border-radius:10px;cursor:grab;transition:left .35s,top .35s,background .2s;touch-action:none}
+.card.sorted{background:var(--mint)}
+.card.cur{background:var(--red);color:#fff;border:3px solid var(--red)}
+.card.temp{background:var(--org);color:var(--ink);border-color:var(--org)}
+.card.drag{transition:none;z-index:9;cursor:grabbing;box-shadow:0 6px 16px #0005}
+.card.pulse{animation:p 0.7s 3}
+.card.shake{animation:s .35s}
+@keyframes p{50%{box-shadow:0 0 0 6px var(--org)}}
+@keyframes s{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@media (prefers-reduced-motion:reduce){.card,.badge{transition:none}.card.pulse,.card.shake{animation:none}}
+#vars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.v{border-radius:10px;padding:8px;text-align:center;color:#fff}
+.v b{display:block;font-size:13px}.v span{font:700 24px Consolas,"Courier New",monospace}
+#msg{min-height:3.2em;padding:10px 12px;border-radius:10px;background:var(--panel);border-left:5px solid var(--line)}
+#msg.ok{border-color:var(--grn)}#msg.err{border-color:var(--red)}
+#test{font:14px Consolas,"Courier New",monospace;color:var(--mut);margin:8px 0;min-height:1.5em}
+#trace{display:flex;gap:12px;align-items:flex-start;padding:4px 2px}
+.tcol div{width:46px;height:26px;line-height:24px;text-align:center;border:1px solid var(--line);background:var(--card);font-weight:600}
+.tcol div.s{background:var(--mint)}.tcol div.r{background:var(--red);color:#fff}
+.tcol.pos div{border:0;background:none;width:auto;min-width:92px;text-align:left;color:var(--mut);font-weight:400}
+.key{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 14px;font-size:14px}.key span{display:inline-block;width:14px;height:14px;border:1px solid var(--line);vertical-align:-2px;margin-right:5px}
+h2{font:700 20px Cambria,Georgia,serif;margin:18px 0 4px}
+.t{color:var(--grn);font-weight:700}.f{color:var(--red);font-weight:700}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+button,select{font:inherit;padding:8px 14px;border-radius:8px;border:1.5px solid var(--grn);background:var(--bg);color:var(--fg);cursor:pointer}
+button.pri{background:var(--grn);color:#fff}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--org);outline-offset:2px}
+.wrap{overflow-x:auto}
+pre{margin:0;background:var(--code);color:#fff;border-radius:12px;padding:12px 0;font:13px/1.65 Consolas,"Courier New",monospace;min-width:430px}
+pre i{display:block;padding:0 16px;font-style:normal;white-space:pre}
+pre i.hl{background:#f2af3440;box-shadow:inset 3px 0 var(--org)}
+pre i.ran{background:#2e7d6366}
+.k{color:#f2af34;font-weight:700}.n{color:#f9dda6}
+#stats{color:var(--mut);margin-top:10px}
+</style></head><body><main>
+<h1>Insertion Sort Lab</h1>
+<p class="sub">Pick a number set, then sort it yourself. Drag (or tap) the cards, and the table below builds one column per pass. The variables <b>x</b>, <b>Temp</b> and <b>y</b> and the Python code update after every move.</p>
+<div class="sw"><div id="stage" aria-label="Card table"></div></div>
+<div id="vars"></div>
+<div id="msg" role="status" aria-live="polite"></div>
+<div id="test"></div>
+<div class="btns">
+<button id="hint">Hint</button><button id="auto" class="pri">Do the next move</button><button id="reset">Restart</button>
+<button id="new">New cards</button>
+<label>Numbers <select id="size"><option value="cl">Set 1: Classic (5, 2, 4, 1)</option><option value="t19">Set 2: Figure 19.3 (9 cards)</option><option value="fig">Set 3: Figure 23.01 (6 cards)</option><option value="r6">Random (6 cards)</option></select></label>
+<label><input type="checkbox" id="showtest" checked> Show the while test</label>
+</div>
+<h2>Your sort, pass by pass (like Figure 23.01)</h2><div class="key"><div><span style="background:var(--mint)"></span>Sorted</div><div><span style="background:var(--red)"></span>Next card</div><div><span></span>Unsorted</div></div><div class="sw"><div id="trace"></div></div>
+<div class="wrap"><pre id="code" aria-label="Python code"></pre></div>
+<div id="stats"></div>
+</main>
+<script>
+const CODE=["def InsertionSort(TheData):","    ArrayLength = len(TheData)","    for x in range(1, ArrayLength):","        Temp = TheData[x]","        y = x - 1","        while y >= 0 and Temp < TheData[y]:","            TheData[y + 1] = TheData[y]","            y -= 1","        TheData[y + 1] = Temp","    return TheData"];
+const $=id=>document.getElementById(id), stage=$("stage");
+let shk=null,cards,cells,tempId,tempV,x,y,phase,st,hl,ran,msg,kind,L={},els={},slotEls=[],drag=null,hintId=null;
+const val=id=>cards[id].v;
+function init(arr){cards=arr.map((v,i)=>({id:i,v}));cells=arr.map((_,i)=>i);tempId=null;tempV=null;x=1;y=null;phase="lift";st={c:0,s:0,m:0};hl=[3];ran=[];hintId=null;
+ Object.values(els).forEach(e=>e.remove());els={};cards.forEach(c=>{const e=document.createElement("div");e.className="card";e.dataset.id=c.id;e.textContent=c.v;stage.appendChild(e);els[c.id]=e});
+ say("Pass 1: the first card is already a sorted hand. Drag the card at index x = 1 up into the Temp zone to lift it out of the list.","info");render()}
+function say(t,k){msg=t;kind=k}
+function geo(){const n=cells.length,W=stage.clientWidth,p=Math.min(88,(W-16)/(n+1)),cw=p*.8,ch=cw*1.25;
+ L={n,W,p,cw,ch,l0:(W-(n+1)*p)/2,ty:36,ry:36+ch+34};L.H=L.ry+ch+62;return L}
+const sx=i=>L.l0+(i+1)*L.p+(L.p-L.cw)/2;
+function render(){geo();stage.style.height=L.H+"px";
+ stage.querySelectorAll(".zone,.zl,.slot,.idx").forEach(e=>e.remove());
+ stage.insertAdjacentHTML("afterbegin",`<div class="zone" style="height:${L.ch+16}px"></div><div class="zl">Temp zone: drag the key card up here</div>`);
+ const gap=cells.indexOf(null),nx=nextMove();
+ for(let i=-1;i<L.n;i++){stage.insertAdjacentHTML("beforeend",`<div class="slot${i===gap?" gap":""}${hintId!==null&&nx.tgt.t==="slot"&&nx.tgt.i===i?" tgt":""}" style="left:${sx(i)}px;top:${L.ry}px;width:${L.cw}px;height:${L.ch}px"></div><div class="idx" style="left:${sx(i)}px;top:${L.ry+L.ch+4}px;width:${L.cw}px;color:${i<0?"var(--mut)":""}">[${i}]</div>`)}
+ cards.forEach(c=>{const e=els[c.id],i=cells.indexOf(c.id);if(e===(drag&&drag.el))return;
+  e.style.width=L.cw+"px";e.style.height=L.ch+"px";e.style.fontSize=L.cw*.4+"px";
+  const isT=c.id===tempId;e.style.left=sx(isT?x:i)+"px";e.style.top=(isT?L.ty:L.ry)+"px";
+  e.className="card"+(isT?" temp":i>=0&&i<x?" sorted":(phase==="done"?" sorted":i===x&&phase==="lift"?" cur":""))+(c.id===hintId?" pulse":"")+(c.id===shk?" shake":"")});
+ bdg("x",x,"var(--red)",0);if(y!==null)bdg("y",y,"var(--grn)",1);
+ const V=[["x",x,"var(--red)"],["Temp",tempV,"#f2af34;color:#12332b"],["y",y,"var(--grn)"],["ArrayLength",L.n,"var(--mut)"]];
+ $("vars").innerHTML=V.map(v=>`<div class="v" style="background:${v[2]}"><b>${v[0]}</b><span>${v[1]===null?"—":v[1]}</span></div>`).join("");
+ const m=$("msg");m.textContent=msg;m.className=kind;
+ $("code").innerHTML=CODE.map((l,i)=>`<i class="${hl.includes(i)?"hl":ran.includes(i)?"ran":""}">${l.replace(/</g,"&lt;").replace(/\b(def|for|in|while|and|return)\b/g,'<span class="k">$1</span>').replace(/\b(\d+)\b/g,'<span class="n">$1</span>')}</i>`).join("");
+ let t="";if($("showtest").checked&&phase==="loop"){const a=y>=0,b=a&&tempV<val(cells[y]);
+  t=`y >= 0 → <span class="${a?"t":"f"}">${a}</span>`+(a?`   Temp < TheData[y] → ${tempV} < ${val(cells[y])} → <span class="${b?"t":"f"}">${b}</span>`:"")+`   while test → <span class="${b?"t":"f"}">${b?"True: shift":"False: insert"}</span>`}
+ $("test").innerHTML=t;
+ $("stats").textContent=`Comparisons: ${st.c} · Shifts: ${st.s} · Mistakes: ${st.m}`;$("hint").disabled=$("auto").disabled=phase==="done";renderTrace()}
+function renderTrace(){const n=cards.length;let a=cards.map(c=>c.v),h=`<div class="tcol pos"><div><b>Position number</b></div>${a.map((_,i)=>`<div>${i}</div>`).join("")}</div>`;
+ for(let k=0;k<n;k++){if(k<=x-1)h+=`<div class="tcol"><div>&nbsp;</div>${a.map((v,i)=>`<div class="${i<=k?"s":i===k+1?"r":""}">${v}</div>`).join("")}</div>`;
+  if(k+1<n){const t=a[k+1];let j=k;while(j>=0&&t<a[j]){a[j+1]=a[j];j--}a[j+1]=t}}
+ $("trace").innerHTML=h}
+function bdg(t,i,c,row){let e=stage.querySelector(".b"+t);if(!e){e=document.createElement("div");e.className="badge b"+t;e.textContent=t;stage.appendChild(e)}
+ e.style.cssText=`left:${sx(i)+L.cw*.12}px;top:${L.ry+L.ch+26}px;width:${L.cw*.76}px;background:${c}`}
+function nextMove(){if(phase==="done")return{};if(phase==="lift")return{id:cells[x],tgt:{t:"temp"},text:`Drag the card ${val(cells[x])} (index ${x}) up into Temp.`};
+ const g=y+1,v=y>=0?val(cells[y]):null,c=y>=0&&tempV<v;
+ return c?{id:cells[y],tgt:{t:"slot",i:g},text:`${tempV} < ${v} is True, so drag ${v} one place right into the gap.`}:{id:tempId,tgt:{t:"slot",i:g},text:`${y<0?"y is -1, so y >= 0 is False":tempV+" < "+v+" is False"}: drop Temp into the gap at index ${g}.`}}
+function bad(t,id){st.m++;say(t,"err");shk=id;setTimeout(()=>{shk=null},450)}
+function attempt(id,tg){ran=[];hintId=null;const cell=cells.indexOf(id);
+ if(phase==="lift"){if(cell===x&&tg.t==="temp"){tempId=id;tempV=val(id);cells[x]=null;y=x-1;phase="loop";hl=[5];ran=[3,4];say(`Temp = TheData[${x}] = ${tempV}. Then y = x - 1 = ${y}. Now decide: is the while test True or False?`,"ok")}
+  else bad(`Lift the card at index x = ${x} up into the Temp zone first.`,id);return}
+ const g=y+1,c=y>=0&&tempV<val(cells[y]);
+ if(tg.t!=="slot"||tg.i!==g)return bad(`Drop it into the dashed gap at index y + 1 = ${g}.`,id);
+ if(id===tempId){if(c)return bad(`Not yet! ${tempV} < ${val(cells[y])} is True, so shift ${val(cells[y])} right first.`,id);
+  if(y>=0)st.c++;cells[g]=id;tempId=null;ran=[8];x++;
+  if(x>=L.n){phase="done";hl=[9];say(`Sorted! TheData[${g}] = Temp was the last insert. ${st.c} comparisons, ${st.s} shifts, ${st.m} mistakes.`,"ok")}
+  else{phase="lift";hl=[3];say(`Inserted: TheData[${g}] = Temp. The sorted hand now has ${x} cards. Pass ${x}: lift the card at x = ${x}.`,"ok")}return}
+ if(cell===y&&y>=0){if(!c)return bad(`Stop! ${tempV} < ${val(id)} is False, so the while loop ends.${tempV===val(id)?" Equal values are not shifted, which keeps the sort stable.":""} Insert Temp into the gap instead.`,id);
+  st.c++;st.s++;cells[g]=id;cells[y]=null;y--;ran=[6,7];say(`Shifted right: TheData[y + 1] = TheData[y], then y -= 1, so y = ${y}. Test again.`,"ok");return}
+ bad(`Only the card at y = ${y} can move right, or Temp can drop into the gap.`,id)}
+stage.addEventListener("pointerdown",e=>{const el=e.target.closest(".card");if(!el||phase==="done")return;const r=el.getBoundingClientRect();
+ drag={el,id:+el.dataset.id,ox:e.clientX-r.left,oy:e.clientY-r.top,sx:e.clientX,sy:e.clientY};el.setPointerCapture(e.pointerId);el.classList.add("drag")});
+stage.addEventListener("pointermove",e=>{if(!drag)return;const r=stage.getBoundingClientRect();drag.el.style.left=e.clientX-r.left-drag.ox+"px";drag.el.style.top=e.clientY-r.top-drag.oy+"px"});
+stage.addEventListener("pointerup",e=>{if(!drag)return;const d=drag;drag=null;d.el.classList.remove("drag");
+ const moved=Math.hypot(e.clientX-d.sx,e.clientY-d.sy)>6,r=stage.getBoundingClientRect(),cx=e.clientX-r.left-d.ox+L.cw/2,cy=e.clientY-r.top-d.oy+L.ch/2;
+ let tg;if(!moved)tg=phase==="lift"?{t:"temp"}:{t:"slot",i:cells.indexOf(null)};
+ else if(cy<L.ry-10)tg={t:"temp"};else tg={t:"slot",i:Math.max(-1,Math.min(L.n-1,Math.floor((cx-L.l0)/L.p)-1))};
+ attempt(d.id,tg);render()});
+$("hint").onclick=()=>{const m=nextMove();hintId=m.id;say("Hint: "+m.text,"info");render()};
+$("auto").onclick=()=>{const m=nextMove();attempt(m.id,m.tgt);render()};
+$("reset").onclick=()=>init(cards.map(c=>c.v));
+const SETS={cl:[5,2,4,1],t19:[27,19,36,42,16,89,21,16,55],fig:[47,6,54,17,93,28]},pick=()=>SETS[$("size").value]||Array.from({length:6},()=>1+Math.floor(Math.random()*99));
+$("new").onclick=()=>{$("size").value="r6";init(pick())};$("size").onchange=()=>init(pick());
+$("showtest").onchange=render;addEventListener("resize",render);
+init(pick());
+</script></body></html>
